@@ -1,0 +1,2 @@
+# Blog_Django_Practice_1
+first_django_project
