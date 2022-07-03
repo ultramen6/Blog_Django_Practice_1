@@ -37,3 +37,12 @@ django-admin startproject Blog
 ```
 далее, открываю VSC через code . 
 
+*Первичная настройка завершена*
+сохраню redmi и сделаю первый коммит 
+
+```console
+git add .
+git commit -m 'text'
+git push
+```
+
