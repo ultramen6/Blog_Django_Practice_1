@@ -1,6 +1,9 @@
 # Blog_Django_Practice_1
 first_django_project
 
+Проконспектированы *2* из *13* частей.  
+Примерное затраченное время на MD и самого кода: **6.5 часов**. ( 07-07-2021)  
+
 Этот проект воссоздан с ютуб канала:   
 [Youtube](https://www.youtube.com/watch?v=T0Xi8gWDrQ0&list=PLlWXhlUMyooaDkd39pknA1-Olj54HtpjX&index=1)    
 Первой целью - является полный разбор ( свои авторские умозаключения , выводы и вся   остольная 'вода' вроде этой) и наидетальнейший конспект почти каждого момента,   воспроизведенным автором видео, коненчо же в моей редакции, как ученика, находящегося   на лекции. Если хватит сил и терпения расписывать все 14 уроков на столько подробно, как   первый, не исключаю дополнительные отдельные погружения в документацию или другие   ссылки на других авторов по разъяснению конкретных моментов. Так же планировал   проанализировать код самой библиотеки, если получится, хотя бы на те классы и функции,   которые используются в проекте как минимум.  
@@ -244,3 +247,319 @@ git push
 ```
 
 ### Шаблоны, наследование шаблонов - 2 часть.  
+
+Начнем с **views.py** приложения Blog:  
+Используя джанговый HttpRespone в виде фунуции, с заголовком, особо много не поиспользуешь. Для нормальной работы потребуется *html* странички, с которыми будет удобней работать, да и вообще, по-другому никак)  
+Эти Html страницы наполняются данными ( верстка ) и отправляются пользователям.  
+Создадим *html* шаблон(ы):  
+В приложении Blog, создаем папку *tepmlates*, внутри нее папку *Blog*.   
+Сделано это потому, что бы не было конфликтов шаблонов с одинаковыми названиями, эти шаблоны распределяются по папкам с названием привязанного шаблона приложения.  
+
+Создаем **index.html** в teplates/Blog   
+Находим на гитхабе стандартный текст:   [UPD: можно и на бутсрапе сразу]   
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ru-compatible" content="ie=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/fonts">
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+  </body>
+</html>
+```
+Добавляем название вкладки и пару строк в тело, под h1 и h2 заголовками:  
+```html
+   <title>Index Page</title>
+
+   <body>
+        <h1>Hello world</h1>
+        <h2>text</h2>
+   </body>
+```
+Далее, проверим что получилось в браузере, но сначала в файле **Blog/views.py** убираем HttpResponse и используем функцию render, которая была создана автоматически при создании приложения.  
+```python
+from django.shortcuts import render
+
+
+def posts_list(request):
+    return render(request, 'blog/index.html')
+```
+Тестим на сервере. http://127.0.0.1:8000/blog/   
+
+Далее, для того что бы отправить пользователю какие-то данные, мы можем передать к примеру, значения словаря:  
+```python
+def posts_list(request):
+    n = 'asdklfasdkfljgh' # условный словарь
+    return render(request, 'blog/index.html', context={'name': n}) 
+    """ передаем в функцию render 3-ий аргумент context, 
+    в котором к словарю назначаем ключ с названием 'name' для нашей переменной n.
+```
+**Важно**, ключ *name* - это та самая переменная, которая будет использоваться в шаблоне html.   
+Добавляем в теги шаблона *html* нашу переменную:  
+Конструкция {{ }} как раз для этого и существет:  
+```html
+ <body>
+        <h1>Hello world</h1>
+        <h2>text</h2>
+        <p>
+            {{ name }}
+        </p>
+```
+Можно увидеть результат в браузере. В случае, если переменная в *html* шаблоне, и в коде функции не будет правильно называться, тогда не будет исключений джанго, он просто ничего не выведет.   
+*Процесс наполнения шаблонов html данными называется rendering*  
+
+Мы можем передать список функции render:  
+```python
+def posts_list(request):
+    n = ['a','b','c','d'] 
+    return render(request, 'blog/index.html', context={'name': n}) 
+```
+Он конечно же отобразится списком в *html*.  
+Что бы сделать отображение вертикальным списком надо его обработать циклом.  
+(я бы раньше подумал, что это внутри фунции render надо было бы делать xD)  
+Но, нет, джанго умеет делать так: (P.S я на самом деле пока не знаю, но может и не только джангд так умеет)  
+```html
+<body>
+        <h1>Hello world</h1>
+        <h2>text</h2>
+        
+        {% for name in names %}  <!-- % - указание цикла -->
+            <p>
+                {{ name }}
+            </p>
+        {% endfor %}             <!-- % - указание завершения цикла -->
+        
+  </body>
+```
+Разжевываю что делает джанго. Он начинает цикл в указаном месте по стандартному питонячему циклу, элемент списка *name* внутри списка *names* итерируется. На каждой итерации он "оборачивается" заголовком <p></p>  
+Можно посмотреть результат в браузере.   
+**Обрати внимание**, что в функции render название ключа осталось name, в html название names.  
+Пару слов об *html* страницах в приложении - если приложение не состоит из одной зарендеренной странички, и есть разная детализация внутри приложения, то использовать одну главную *html* страничку было бы не разумно, так как постоянно бы пришлось ее менять под разные задачи. Для этого в джанго есть **Шаблонизатор**, который позволяет наследоваться от *html* странички.  
+
+Создадим *html* файл *base_blog.html* в templates/Blog/  
+Из базового шаблона *index.html* переносим содержимое в *base_blog.html*, убираем все частности, оставить общие элементы.  ( как изначальный шаблон )  
+
+Сразу добавим стили с bootstrap:  
+[BootStrap](https://getbootstrap.com/docs/5.2/getting-started/introduction/)    
+Для начала надо поключить его добавив:  
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" 
+     rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+  </head>
+  <body>
+  </body>
+</html>
+```
+Затем, сразу возьмем навигационный бар:  
+```html
+<nav class="navbar navbar-expand-lg bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Navbar</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Dropdown
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="#">Action</a></li>
+            <li><a class="dropdown-item" href="#">Another action</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Something else here</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link disabled">Disabled</a>
+        </li>
+      </ul>
+      <form class="d-flex" role="search">
+        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+      </form>
+    </div>
+  </div>
+</nav>
+```
+Убираем выпадающий список в этом скопированном баре:    
+```html
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Dropdown
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="#">Action</a></li>
+                  <li><a class="dropdown-item" href="#">Another action</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="#">Something else here</a></li>
+                </ul>
+              </li>
+```
+Меняем цвет бара, берем на бутстрапе такой стиль:  
+style="background-color: #e3f2fd  
+
+Находим строчку в новом *html* шаблоне:  
+```html
+<nav class="navbar navbar-expand-lg bg-light">
+```
+Замена на:  
+```html
+<nav class="navbar navbar-expand-lg" style="background-color: #e3f2fd;">
+```
+
+Теперь надо разметить страничку для данных под частности:  
+Расстановка для таких мест осуществляется с помощью блоков {% block title%} и конец блока {% endblock %}  
+Применим сразу на примере:  
+```html
+<title>
+    {% block title %}
+        Blog Engine
+    {% endblock %}
+</title>
+<!-- в конце массива -->
+</nav>
+
+        {% block content %}
+            CONTENT
+        {% endblock %}
+
+  </body>
+```
+Можно было бы сравнить это все с анкетой, где есть заполненные места, и незаполненные.  
+Далее, можно спокойно в *index.html* убрать все, кроме частностей:  
+```html
+<!-- добавляем вначале эту строчку, что бы все работало -->
+{% extends 'Blog/base_blog.html' %}
+<!-- расширение переадресуется в шаблон base_blog.html -->
+
+{% block title%}
+    Posts list
+{% endblock %}
+
+
+{% block content %}
+    {% for name in names %}
+        <p>
+            {{ name }}
+        </p>
+    {% endfor %}
+{% endblock %}
+```
+В итоге, сразу несколько действий должно быть осуществленно, добавить -  
+{% extends 'Blog/base_blog.html' %}  
+И после можно скопировать указаные ранее блоки с раширениями из *Blog/base_blog.html*  
+Внутрь блока с пометкой content отправим ранний цикл со списком из старого *index.html*  
+
+Немного меняем верстку:  **tip and trick**  
+
+выделяем нижний кусок в *base_blog.html*  
+{% block content %}  
+    CONTENT  
+{% endblock %}  
+Не снимая это выделение проихводим такие действия -    
+в VSC:     
+Open command palette (usually Ctrl+Shift+P)    
+Execute Emmet: Wrap with Abbreviation  
+
+В открывшейся командной строке вводим:  
+**.continer>.row>.col-6.offset-md-2**  
+Таким образом, мы обернули наш блок дополнительной бутстраповской версткой. ( вообще топ фича )  
+```html
+<!-- получился такой код -->
+<div class="continer">
+    <div class="row">
+        <div class="col-6 offset-md-2">
+            {% block content %}
+                CONTENT
+            {% endblock %}
+        </div>
+    </div>
+</div>
+```
+***Еще одно расширение:***  
+Launch VS Code Quick Open (Ctrl+P)  
+paste ext install htmltagwrap and enter  
+select HTML  
+press Alt + W (Option + W for Mac).  
+
+Оно немного попроще, но тоже полезное.  
+Еще добавим отступ:  
+```html 
+<div class="continer mt-5"> <!-- margin top 5 -->
+```
+Ну и добавим заголовок к нашему списку внутри *index.html*  
+```html
+{% block content %}
+    <h1 class="mb-5">Posts:</h1>   <!-- вот он (mb-5 margin bottom) -->
+    {% for name in names %}
+        <p>
+            {{ name }}
+        </p>
+    {% endfor %}
+{% endblock %}
+```
+Все эти манипуляции с шаблоном нам дают некую свободу действий, что если нам надо что то поменять или добавить, мы будем создавать другие шаблоны, наследуясь от базовых и разом менять все что нужно и по нужным блокам, не переписывая тонны *html* страниц. Джанго хорош, в общем. ( а что будет потом с бд, вообще кайф )   
+
+Еще осталось поправить структуру шаблонов, так как у нас нет сейчас общего шаблона на все приложения в одной стилистике, для этого:  
+Создаем папку в корневой папке с названием templates ( прям в той, где находятся Blog, blog engine). Внутри этой папки создаем шаблон *base.html*   
+Далее, из *base_blog.html* переносим весь код в новый файл. Это и будет базовым шаблоном для всех приложений.  
+*base_blog.html* ( который пустой ) теперь по аналогии с *index.html* будет расширением для нашего основного шаблона:  
+```html
+{% extends 'base.html' %}
+```
+Если мы обновим страницу в браузере, тогда словим исключение о том, что джанго не видит этот шаблон; так как мы не добавили этот шаблон - добавляем:  
+Переходим в основную папку *BlogEngine/settings.py* и внутри этого фала - находим переменную *TEMPLATES*  
+В ключ 'DIRS' добавляем наш путь до шаблона:  
+```Python
+'DIRS': [
+            Path.joinpath(BASE_DIR, 'templates')
+        ]
+'''BASE_DIR является глобальной переменной, которая находится выше. Эта переменная указывает путь до приложения.'''
+```
+Можно это проанализировать в консоли, для этого надо перейти в папку с этим файлом *settings.py*, а то абсолютный путь будет неверным:  
+```console
+/mnt/c/Dev/Blog_Django_Practice_1/BlogEngine$ cd BlogEngine/
+/mnt/c/Dev/Blog_Django_Practice_1/BlogEngine/BlogEngine$ python
+
+Python 3.9.2 (default, Feb 28 2021, 17:03:44)
+[GCC 10.2.1 20210110] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+
+from pathlib import Path
+>>> base = Path('settings.py').resolve().parent.parent
+>>> base
+PosixPath('/mnt/c/Dev/Blog_Django_Practice_1/BlogEngine')
+>>> Path.joinpath(base, 'templates')
+PosixPath('/mnt/c/Dev/Blog_Django_Practice_1/BlogEngine/templates')
+>>>
+```
+Вот так эта ссылка с абсолютным путем ведет джанго прокету, затем функция Path.joinpath добаляет 'templates', и шаблон становится видимым.   
+Проверяем в браузере.   
+
+<END> 
+
+### Создание модели Post, шаблоны Index, Detail - 3 часть.  
+
+СОЗДАТЬ КАРТОЧКИ АНКИ ПО 2 УРОКУ  
