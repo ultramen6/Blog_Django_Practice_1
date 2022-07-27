@@ -576,7 +576,7 @@ Id , title, body, slug, tags
 4
 5
 ```
-Что бы не писать спецефический код , который работает в БД , в джанго есть   
+Что бы не писать специфический код , который работает в БД , в джанго есть   
 ORM модели ( Object relation mappin)- Это наложение обьектов языка Python   
 на реляционную модель БД.  
 ORM - это некий абстрактный слой логики, который позволяет описывать данные,  
@@ -709,10 +709,95 @@ def posts_list(request):
     posts = Post.objects.all()
     return render(request, 'blog/index.html', context={'posts': posts}) 
 ```
-Меняем старую переменную *n* на новую *posts*, обращаемся к обьекту POst, перед  
+Меняем старую переменную *n* на новую *posts*, обращаемся к обьекту Post, перед  
 этим импортируем эту модель.  
 После, в *html* шаблоне меняем старую переменную *names* на *posts*
 
+Еще немного верстки - добавим поля для наших постов с помощью  
+[BootStrap](https://getbootstrap.com/docs/5.2/components/card/)   
+*index.html* в папке Blog
+```html
+<div class="card">
+  <div class="card-header">
+    Featured
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">Special title treatment</h5>
+    <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+    <a href="#" class="btn btn-primary">Go somewhere</a>
+  </div>
+</div>
+```
+Берем этот кусок кода, и впрыскиваем в него ответ из БД в *index.html* файле нашего приложения:   
+```html
+ {% block content %}
+    <h1 class="mb-5">Posts:</h1>
+    {% for post in posts %}
 
+    <div class="card mb-4">
+        <div class="card-header">
+          {{ post.date_pub}}      <!-- Дата публикации -->
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">{{ post.title }}</h5>  <!-- Названиве поста --> 
+          <p class="card-text">{{ post.body|truncatewords:15 }}</p> <!-- содержание поста , с ограничением в 15 символов -->
+          <a href="#" class="btn btn-light">Read</a> <!-- пока что неактивная кнопка -->
+        </div>
+      </div>
+    {% endfor %}
+{% endblock %}
+```
+Проверяем в браузере результат.  
+Теперь можно добавить ссылку из Navbar  
+Переходим в корневой *base.html* папке templates:  
+
+Ищем где начинается кнопка Home и меняем на этот код, который надо донастроить:  
+```html
+<li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="{% url 'posts_list_url' %}">Blog</a>
+              </li>
+```
+Тут в **href** добавили конструкцию *{% url 'posts_list_url' %}*, что это такое?
+Во первых, надо добавить в нашу функцию *include* в *urls.py* 3-ий аргумент, а именно имя.  
+```python
+from django.urls import path
+
+from .views import *
+
+
+urlpatterns = [
+    path('', posts_list, name='posts_list_url')
+]
+```
+И получается что мы используем url ссылку внутри джанги, которую в ставляем в джанговое выражение {% %}
+Теперь если проверить в браузере, при нажатии на Home, нас перенаправляет на страницу постов.  
+
+Далее по проекту.. Необходимо добавить страничку детализации постов, для того, что бы можно было зайти в конкретный пост и прочитать его. Причем, ссылка для   
+странички конкретного поста имеет человеческий вид, это как раз и есть slug,  
+который заполнялся в нашей модели постов. К тому же sLug созадвался как уникльный.  
+
+Допишем в наши урлы новый путь:  
+```Python
+urlpatterns = [
+    path('', posts_list, name='posts_list_url'),
+    path('post/<str:slug>/', post_detail, name='post_detai_url')
+]
+```
+Затем необходимо добавить новую функцию *post_Detail*, которая еще не существует в папке *views.py* приложения Blog:  
+```Python
+def post_detail(request, slug):
+    post = Post.objects.get(slug__iexact=slug)
+    return render(request, 'blog/post_detail.html', context={'post': post})
+```
+В ней мы создаем переменную, где обращаемся к объекту Post, на подобии как было в Shell, когда создавали сами посты. С помощью метода *slug__iexact* мы обращаемся к регистронезависимому компоненту slug, и его рендерим в еще пока    несозданном *post_detail.html* шаблоне.   
+
+Далее создаем *post_detail.html* файл в шаблонах приложения блог:  
+```html
+{% extend 'Blog/base_blog.html %}
+
+{% block title %}
+    {{ post.title }} - {{}}
+{% endblock %}
+```
 
 
