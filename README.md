@@ -791,13 +791,25 @@ def post_detail(request, slug):
 ```
 В ней мы создаем переменную, где обращаемся к объекту Post, на подобии как было в Shell, когда создавали сами посты. С помощью метода *slug__iexact* мы обращаемся к регистронезависимому компоненту slug, и его рендерим в еще пока    несозданном *post_detail.html* шаблоне.   
 
-Далее создаем *post_detail.html* файл в шаблонах приложения блог:  
+Далее создаем *post_detail.html* файл в шаблонах приложения блог:   
+Наследуемся от базового шаблона.  
 ```html
 {% extend 'Blog/base_blog.html %}
 
 {% block title %}
-    {{ post.title }} - {{}}
+    {{ post.title }} - {{ block.super }}
+{% endblock %}
+
+{% block content %}
+    <h1 class="mt-5">
+        {{ post.title }}
+    </h1>
+    <p>
+         {{ post.body }}
+    </p>
 {% endblock %}
 ```
+Проверяем в браузере.  
+
 
 

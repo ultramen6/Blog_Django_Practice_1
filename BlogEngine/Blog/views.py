@@ -10,3 +10,4 @@ def posts_list(request):
 def post_detail(request, slug):
     post = Post.objects.get(slug__iexact=slug)
     return render(request, 'blog/post_detail.html', context={'post': post})
+
