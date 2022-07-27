@@ -70,7 +70,7 @@ Model
 View  
 Controller  
 
-Суть заключается в том, что код раздельный для DB , для ответа пользователям (View), и отдельная обработка перед отправкой к пользователю (controller)  
+Суть заключается в том, что код раздельный для DB (Model) , для ответа пользователям (View), и отдельная обработка перед отправкой к пользователю (controller)  
 
 **urls.py** - отвечает за маршрутизацию пользователей  
 **views.py** - отвечает за обработку запроса от пользователя  
@@ -204,7 +204,7 @@ from .views import *
 
 
 urlpatterns = [
-	path('', posts_list)
+    path('', posts_list)
 ]
 ```
 Создали переменную urlpatterns. Внутри path создаем !будущую функцию posts_list (   произвольное название ), далее, в **views.py** импортируем HttpRespons, создаем функцию   posts_list, и по аналогии со старой функцией hello, передаем заголовок первого уровня:  
@@ -226,10 +226,10 @@ def posts_list(request):
 Предположим, что из запроса по адресу http://127.0.0.1:8000/blog/something  
 Джанго не трогает домен, получает такой кусок:  
 /blog/something - этот кусочек обращается в **urls.py**, куда попадает в urlpatterns в   цикле, и проверяется соответствие полученного урла тому шаблону , который имеется в   списке    (**/blog/**something). Он находит этот шаблон, понимает что мы указали отдельную   функцию include, куда джанго отправляет остаток адреса **/something** в **  urls.py** приложения Blog.  
-Конечно же **/something** после отправки в **urls.py**, снова попадает в urlpatterns.   Джагшл начинает опять сравнивать этот адрес с тем, что в списке urlpatterns. И НИЧЕГО не находит:  
+Конечно же **/something** после отправки в **urls.py**, снова попадает в urlpatterns.   Джанго начинает опять сравнивать этот адрес с тем, что в списке urlpatterns. И НИЧЕГО не находит:  
 ```python
 urlpatterns = [
-	path('', posts_list)
+    path('', posts_list)
 ]
 ```
 Не находит потому, что у нас здесь ничего и нет, подходящее под **/something**.  
@@ -478,7 +478,7 @@ style="background-color: #e3f2fd
 {% block content %}  
     CONTENT  
 {% endblock %}  
-Не снимая это выделение проихводим такие действия -    
+Не снимая это выделение производим такие действия -    
 в VSC:     
 Open command palette (usually Ctrl+Shift+P)    
 Execute Emmet: Wrap with Abbreviation  
@@ -555,11 +555,164 @@ PosixPath('/mnt/c/Dev/Blog_Django_Practice_1/BlogEngine')
 PosixPath('/mnt/c/Dev/Blog_Django_Practice_1/BlogEngine/templates')
 >>>
 ```
-Вот так эта ссылка с абсолютным путем ведет джанго прокету, затем функция Path.joinpath добаляет 'templates', и шаблон становится видимым.   
+Вот так эта ссылка с абсолютным путем ведет джанго проект, затем функция Path.joinpath добаляет 'templates', и шаблон становится видимым.   
 Проверяем в браузере.   
 
 <END> 
 
+СОЗДАТЬ КАРТОЧКИ АНКИ ПО 2 УРОКУ - *выполнено*
+
 ### Создание модели Post, шаблоны Index, Detail - 3 часть.  
 
-СОЗДАТЬ КАРТОЧКИ АНКИ ПО 2 УРОКУ  
+Как выглядет БД на простом примере в excel:
+```excel
+Post - название таблички
+
+поля:
+Id , title, body, slug, tags
+1
+2
+3
+4
+5
+```
+Что бы не писать спецефический код , который работает в БД , в джанго есть   
+ORM модели ( Object relation mappin)- Это наложение обьектов языка Python   
+на реляционную модель БД.  
+ORM - это некий абстрактный слой логики, который позволяет описывать данные,  
+которые будут храниться в БД в виде классов языка (Python), такие классы  
+называются - моделями. Верхняя табличка - это схема модели Post   
+ORM нам предоставляет преимущиства абстракции. Мы не только данные для БД описываем  
+через классы. К примеру в данном проекте используется БД SQLite3, на продакшене  
+будет использоваться другие более продвинутые БД , как postgress, mango DB , Mysql  
+итд...
+Если бы не ORM, нам бы пришлось вручную писать специфичные запросы под диалект БД.  
+Однако, с помощью ORM нам достаточно подключить нашу БД и все запросы будут работать  
+без исключения в общем виде.  
+
+Далее,  
+Для того, что бы создать модель Post переходим в *models.py* приложения Blog.  
+```Python
+from django.db import models
+
+# Create your models here.
+class Post(models.Model):
+    title = models.CharField(max_length=150, db_index=True)
+    slug = models.SlugField(max_length=150, unique=True)
+    body = models.TextField(blank=True, db_index=True)
+    date_pub = models.DateTimeField(auto_now_add=True)
+```
+В этой моделе постов, создается табличка Post, в которой мы определяем поля:  
+```Python
+title = models.CharField(max_length=150, db_index=True)
+```
+В проекте условно будет заголовок постов - *title*  
+Он будет экземпляром класса *CharField*, у него есть обязательный элемент  
+*max_length=150*   
+*db_index=True* - индексация для более быстрого поиска. 
+
+```Python
+title = models.SlugField(max_length=150, unique=True)
+```
+У модели Пост будет *Slug*, который будет использоваться к качесве ЧПУ - человеко  
+подобного урла.  
+
+*models.SlugField* - это тоже самое что и *CharField*, только позволяет использовать  
+цифры, буквы в обоих регистрах, нижние подчеркивания и дефисы, все остольные  
+символы *SlugField* запрещает использовать. *SlugField* это валидатор.  
+*unique=True* - уникальные названия.  
+```Python
+body = models.TextField(blank=True, db_index=True)
+```
+*blank=True* означает, что поле может быть пустым.   
+*db_index=True* - индексация для более быстрого поиска.  
+
+Еще добавим дату публикации постов:
+```Python
+date_pub = models.DateTimeField(auto_now_add=True)
+```
+*auto_now_add=True* дата обьекта будет создаваться при сохранении в БД.  
+
+Ниже укажем специальный метод:
+```Python
+def __str__(self):
+    return '{}'.format(self.title)
+```
+__str__ это метод класса, который возвращает строку.  
+Сделано это для того, что бы название класса было такое, как мы укажем в title.  
+
+
+Далее, необходимо обновить миграции в БД, так как у нас появились изменения в моделях,  но БД пустая.
+```bash
+/mnt/c/Dev/Blog_Django_Practice_1$ cd BlogEngine/
+./manage.py makemigrations
+./manage.py migrate
+```
+Далее, внутри shell, можно создать пост для проверки.  
+```bash
+ ./manage.py shell
+```
+```shell
+from Blog.models import Post
+p = Post(title='New post', slug='new-slug', body='new post body')
+>>> p
+<Post: New post>
+p.save()
+```
+Мы сохранили обькет в таблице Post.  
+Джанго при создании модели прибавляет "менеджера", они находятся в атрибуте   
+objects. Если набрать команду dir(p), можно увидеть этот атрибут вместе с другими  
+атрибутами класса. 
+Все операции сохраниния, изменения, осуществляется через них.  
+Теперь создадим пост через "менеджера" моделей:  
+```bash
+p1 = Post.objects.create(title='new post2', slug='new post2', body='body')
+```
+Таким образом, вызывать метод *save()* необязательно.  
+Что бы посмотреть все обьекты, можно вызвать метод *All()*
+```bash
+>>> Post.objects.all()
+<QuerySet [<Post: New post>, <Post: new post2>]>
+```
+Еще парочку методов:  
+```bash
+post = Post.objects.get(slug__iexact='New-slug')
+>>> post
+<Post: New post>
+```
+iexact - регистро независимый поиск, который вернет обьект из таблицы Post, у   
+которого slug = new-slug ( не чуствителен к регистру )
+```bash
+post = Post.objects.filter(slug__contains='new')
+>>> post
+<QuerySet [<Post: New post>, <Post: new post2>]>
+```
+Есть еще метод - filter, который вернет все записи обьектов в Post, у которых  
+slug = new  
+
+**Полный перечень лукапов в документации Django**
+
+Создадим еще 3 поста:  
+```bash
+>>> p1 = Post.objects.create(title='new post3', slug='new post3', body='body')
+>>> p1 = Post.objects.create(title='new post4', slug='new post4', body='body')
+>>> p1 = Post.objects.create(title='new post5', slug='new post5', body='body')
+```
+Теперь все тесты в консоли перенесем во *views.py* нашего проекта. 
+```python
+from django.shortcuts import render
+
+from .models import Post
+
+
+def posts_list(request):
+    posts = Post.objects.all()
+    return render(request, 'blog/index.html', context={'posts': posts}) 
+```
+Меняем старую переменную *n* на новую *posts*, обращаемся к обьекту POst, перед  
+этим импортируем эту модель.  
+После, в *html* шаблоне меняем старую переменную *names* на *posts*
+
+
+
+
