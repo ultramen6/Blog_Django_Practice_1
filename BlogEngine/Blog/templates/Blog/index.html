@@ -1,4 +1,4 @@
-{% extends 'Blog/base_blog.html' %}
+{% extends 'blog/base_blog.html' %}
 
 
 
@@ -9,9 +9,9 @@
 
 {% block content %}
     <h1 class="mb-5">Posts:</h1>
-    {% for name in names %}
+    {% for post in posts %}
         <p>
-            {{ name }}
+            {{ post }}
         </p>
     {% endfor %}
 {% endblock %}
