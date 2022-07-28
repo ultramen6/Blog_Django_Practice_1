@@ -17,7 +17,7 @@
         <div class="card-body">
         <h5 class="card-title">{{ post.title }}</h5>  <!-- Названиве поста --> 
         <p class="card-text">{{ post.body|truncatewords:15 }}</p> <!-- содержание поста , с ограничением в 15 символов -->
-        <a href="{% url 'post_detail_url' slug=post.slug %}" class="btn btn-light">Read</a> <!-- пока что неактивная кнопка -->
+        <a href="{{ post.get_absolute_url }}" class="btn btn-light">Read</a> <!-- пока что неактивная кнопка -->
         </div>
     </div>
 {% endfor %}
